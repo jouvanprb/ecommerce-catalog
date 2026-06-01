@@ -1,8 +1,7 @@
 <template>
-  <div id="app">
-    <div class="app-container">
-      <ProductDisplay />
-    </div>
+  <div id="app" :style="backgroundStyle">
+    <div class="bg-pattern"></div>
+    <ProductDisplay @category-changed="setCategory" />
   </div>
 </template>
 
@@ -11,23 +10,30 @@ import ProductDisplay from './components/ProductDisplay.vue'
 
 export default {
   name: 'App',
-  components: {
-    ProductDisplay
+  components: { ProductDisplay },
+  data() {
+    return {
+      bgColor: '#DCDCDC'
+    }
+  },
+  computed: {
+    backgroundStyle() {
+      // Create a split background (top 65%, bottom 35% white)
+      return {
+        background: `linear-gradient(to bottom, ${this.bgColor} 65%, #FFFFFF 65%)`
+      }
+    }
+  },
+  methods: {
+    setCategory(category) {
+      if (category === "men's clothing") {
+        this.bgColor = '#D6E6FF'
+      } else if (category === "women's clothing") {
+        this.bgColor = '#FDE2FF'
+      } else {
+        this.bgColor = '#DCDCDC'
+      }
+    }
   }
 }
 </script>
-
-<style>
-@import './assets/style/main.css';
-
-#app {
-  width: 100%;
-  min-height: 100vh;
-}
-
-.app-container {
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
-}
-</style>

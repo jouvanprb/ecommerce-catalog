@@ -1,49 +1,44 @@
 <template>
-  <div class="product-display">
-    <!-- Loading State -->
-    <div v-if="loading" class="loader-container">
+  <div class="product-container">
+    <!-- Loading -->
+    <div v-if="loading" class="loading-wrapper">
       <div class="loader"></div>
     </div>
 
-    <!-- Unavailable Product -->
-    <div v-else-if="!isValidCategory" class="unavailable-card">
-      <p class="unavailable-message">This product is unavailable to show</p>
-      <button class="btn btn-next" @click="nextProduct">Next product</button>
-    </div>
-
-    <!-- Men's Clothing -->
-    <div v-else-if="category === 'men\'s clothing'" class="product-card men-theme">
-      <div class="product-image-container">
-        <img 
-          :src="product.image" 
-          :alt="product.title"
-          class="product-image"
-          @error="handleImageError"
-        />
+    <!-- Product Card -->
+    <div v-else-if="product && isValidCategory" class="product-card" :class="themeClass">
+      <!-- Left: Image -->
+      <div class="product-image-area">
+        <img :src="product.image" :alt="product.title" class="product-image" @error="handleImageError" />
       </div>
-      
-      <div class="product-info">
-        <h2 class="product-title">{{ product.title }}</h2>
-        <p class="product-category">{{ product.category }}</p>
+
+      <!-- Right: Info -->
+      <div class="product-info-area">
+        <h1 class="product-title">{{ product.title }}</h1>
         
-        <div class="rating">
-          <div class="stars">
-            <span 
-              v-for="n in 5" 
-              :key="n"
-              class="star"
-              :class="{ filled: n <= Math.round(product.rating.rate) }"
-            >
-              ★
-            </span>
+        <div class="category-rating">
+          <span class="product-category">{{ product.category }}</span>
+          <div class="rating-wrapper">
+            <span class="rating-value">{{ product.rating.rate }}/5</span>
+            <div class="circles">
+              <span 
+                v-for="star in 5" 
+                :key="star" 
+                class="circle" 
+                :class="{ filled: star <= Math.round(product.rating.rate) }"
+              ></span>
+            </div>
           </div>
-          <span class="rating-value">{{ product.rating.rate }}/5</span>
         </div>
-        
+
+        <hr class="divider" />
+
         <p class="product-description">{{ product.description }}</p>
-        
-        <div class="product-price">${{ product.price.toFixed(2) }}</div>
-        
+
+        <hr class="divider" />
+
+        <div class="price">${{ product.price.toFixed(2) }}</div>
+
         <div class="button-group">
           <button class="btn btn-buy" @click="buyNow">Buy now</button>
           <button class="btn btn-next" @click="nextProduct">Next product</button>
@@ -51,44 +46,13 @@
       </div>
     </div>
 
-    <!-- Women's Clothing -->
-    <div v-else-if="category === 'women\'s clothing'" class="product-card women-theme">
-      <div class="product-image-container">
-        <img 
-          :src="product.image" 
-          :alt="product.title"
-          class="product-image"
-          @error="handleImageError"
-        />
-      </div>
-      
-      <div class="product-info">
-        <h2 class="product-title">{{ product.title }}</h2>
-        <p class="product-category">{{ product.category }}</p>
-        
-        <div class="rating">
-          <div class="stars">
-            <span 
-              v-for="n in 5" 
-              :key="n"
-              class="star"
-              :class="{ filled: n <= Math.round(product.rating.rate) }"
-            >
-              ★
-            </span>
-          </div>
-          <span class="rating-value">{{ product.rating.rate }}/5</span>
+    <!-- Unavailable -->
+    <div v-else class="unavailable-card">
+        <div class="unavailable-content">
+          <div class="sad-face">:(</div>
+          <p class="unavailable-message">This product is unavailable to show</p>
+          <button class="btn btn-unavailable-next" @click="nextProduct">Next product</button>
         </div>
-        
-        <p class="product-description">{{ product.description }}</p>
-        
-        <div class="product-price">${{ product.price.toFixed(2) }}</div>
-        
-        <div class="button-group">
-          <button class="btn btn-buy" @click="buyNow">Buy now</button>
-          <button class="btn btn-next" @click="nextProduct">Next product</button>
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -105,56 +69,58 @@ export default {
       isValidCategory: false
     }
   },
+  computed: {
+    themeClass() {
+      if (this.category === "men's clothing") return 'theme-men'
+      if (this.category === "women's clothing") return 'theme-women'
+      return 'theme-unavailable'
+    }
+  },
+  watch: {
+    category: {
+      handler(newVal) {
+        this.$emit('category-changed', newVal)
+      },
+      immediate: true
+    }
+  },
   mounted() {
     this.fetchProduct()
   },
   methods: {
     async fetchProduct() {
       this.loading = true
-      this.isValidCategory = false
-      this.product = null
-      this.category = null
-      
       try {
-        const response = await fetch(`https://fakestoreapi.com/products/${this.currentIndex}`)
-        const data = await response.json()
+        const res = await fetch(`https://fakestoreapi.com/products/${this.currentIndex}`)
+        const data = await res.json()
         
-        if (data.category === 'men\'s clothing' || data.category === 'women\'s clothing') {
+        if (data.category === "men's clothing" || data.category === "women's clothing") {
           this.product = data
           this.category = data.category
           this.isValidCategory = true
         } else {
           this.isValidCategory = false
+          this.category = null
         }
-      } catch (error) {
-        console.error('Error:', error)
+      } catch (err) {
+        console.error(err)
         this.isValidCategory = false
+        this.category = null
       } finally {
         this.loading = false
       }
     },
-    
     nextProduct() {
       this.currentIndex = this.currentIndex + 1
-      if (this.currentIndex > 20) {
-        this.currentIndex = 1
-      }
+      if (this.currentIndex > 20) this.currentIndex = 1
       this.fetchProduct()
     },
-    
     buyNow() {
-      alert(`✨ "${this.product.title}" added to cart! ✨`)
+      // no-op for now, or you could alert
     },
-    
     handleImageError(e) {
-      e.target.src = 'https://via.placeholder.com/300x300?text=No+Image'
+      e.target.src = 'https://picsum.photos/300/300?text=No+Image'
     }
   }
 }
 </script>
-
-<style scoped>
-.product-display {
-  width: 100%;
-}
-</style>
