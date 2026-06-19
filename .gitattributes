@@ -1,0 +1,13 @@
+# File Vue tetep dihitung
+src/**/*.vue linguist-detectable=true
+
+# CSS di folder dist diabaikan
+dist/**/*.css linguist-vendored=true
+
+# Kalau ada file CSS hasil compile Tailwind
+tailwind.css linguist-generated=true
+main.css linguist-generated=true
+
+# Dokumentasi ga ikut dihitung
+*.md linguist-documentation=true
+docs/* linguist-documentation=true
